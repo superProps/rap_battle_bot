@@ -14,8 +14,25 @@ const lyrics = new MusixmatchApi.LyricsApi();
 
 
 async.waterfall([
-    function (next) {
-        const ArtistOpts = {
+    getArtistId,
+    getAlbumsFromId,
+    getTracksFromAlbums,
+    getLyricsFromTracks,
+    getKeywordsFromLyrics
+],
+
+    function (err, results) { if (err) console.log('aha'); });
+
+
+
+
+
+
+
+
+
+function getArtistId (next) {
+    const ArtistOpts = {
             format: 'json',
             qArtist: 'biggie',
             pageSize: 1
@@ -31,8 +48,9 @@ async.waterfall([
                 throw new Error('bad response');
             }
         });
-    },
-    function (id, next) {
+}
+
+function getAlbumsFromId(id, next) {
         let albumOpts = {
             format: 'json',
             sReleaseDate: 'desc',
@@ -55,12 +73,13 @@ async.waterfall([
                 throw new Error('bad response');
             }
         });
-    },
-    function (albumIds, next) {
+    }
+
+    function getTracksFromAlbums (albumIds, next) {
         async.mapSeries(albumIds, function (id, done) {
             var trackOpts = {
                 format: 'json',
-                pageSize: 100
+                pageSize: 1
             };
             tracks.albumTracksGetGet(id, trackOpts, (error, data, response) => {
                 if (error) {
@@ -82,8 +101,9 @@ async.waterfall([
             next(null, _.flatten(results));
         });
 
-    },
-    function (tracks, next) {
+    }
+
+    function getLyricsFromTracks(tracks, next) {
         async.mapSeries(tracks, function (eachTrack, done) {
             var lyricsOpts = {
                 format: 'json',
@@ -117,13 +137,11 @@ async.waterfall([
                 return _.uniq(el);
             })
             results = _.uniq(_.flatten(results));
-            
-            console.log(results, results.length);
+            next(null, results);
         });
     }
 
-],
 
-    function (err, results) { if (err) console.log('aha'); });
-
-
+    function getKeywordsFromLyrics (lyricsArray, next) {
+        
+    }
