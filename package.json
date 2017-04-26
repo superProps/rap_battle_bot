@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "async": "^2.3.0",
+    "mongoose": "^4.9.6",
     "superagent": "^3.5.2",
     "underscore": "^1.8.3",
     "watson-developer-cloud": "^2.29.0"

@@ -7,6 +7,10 @@ key.apiKey = '0e33db5e8d277a212d13ded17755c930'; // {String}
 var fs = require('fs');
 var NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
 var SyllaRhyme = require('syllarhyme');
+var https = require("https");
+const mongoose = require('mongoose');
+const LyricsModel = require('./lyrics_schema');
+const db = 'mongodb://localhost:27017/lyrics';
 
 var nlu = new NaturalLanguageUnderstandingV1({
     "username": "f683016e-5f47-41d9-b7f3-82fdc1b81db1",
@@ -20,7 +24,7 @@ const albums = new MusixmatchApi.AlbumApi();
 const tracks = new MusixmatchApi.TrackApi();
 const lyrics = new MusixmatchApi.LyricsApi();
 
-const artist = "kendrick lamar";
+const artist = "nicki minaj";
 
 async.waterfall([
     getArtistId,
@@ -28,11 +32,28 @@ async.waterfall([
     getTracksFromAlbums,
     getLyricsFromTracks,
     getKeywordsFromLyrics,
-    getNumberOfSyllablesAndLastWord
+    getNumberOfSyllablesAndLastWord,
+    getRhymes
 ],
     function (err, results) {
         if (err) console.log('aha');
         console.log(results);
+        mongoose.connect(db, (err) => {
+            if (err) {
+                console.log(err);
+            }
+            console.log(`connected to ${db}`);
+            results.forEach((lyric, i) => {
+                let lyricNew = new LyricsModel(lyric);
+                lyricNew.save(function (err, doc) {
+                    if (err) {
+                        return console.log(err);
+                    }
+                    console.log(`Lyric ${i} ${doc.raw} saved to db`);
+                });
+            });
+
+        });
     });
 
 function getArtistId(next) {
@@ -147,11 +168,12 @@ function getLyricsFromTracks(tracks, next) {
 
 
 function getKeywordsFromLyrics(lines, next) {
+    //TODO: if there are no keywords, put the lastword in!
     Promise.all(
-        lines.slice(0, 2).map(createNluPromise)
+        lines.slice(0, 10).map(createNluPromise)
     ).then(responses => {
         var finalResult = [];
-        lines.slice(0, 2).forEach((line, i) => {
+        lines.slice(0, 10).forEach((line, i) => {
             var keywords = [];
             responses[i].keywords.forEach(function (el) {
                 keywords.push(el.text);
@@ -184,24 +206,60 @@ function createNluPromise(line) {
     });
 }
 
-function getNumberOfSyllablesAndLastWord (lyricsArray, next) {
+function getNumberOfSyllablesAndLastWord(lyricsArray, next) {
     Promise.all(
         lyricsArray.map(findSyllables)
     ).then(response => {
-            lyricsArray.map(function (el, i) {
+        lyricsArray.map(function (el, i) {
             el.syllables = response[i];
             el.lastWord = el.raw.split(" ").slice(-1)[0].replace(/[^A-z]/g, "");
         })
-        next(null, lyricsArray);        
-    });
+        next(null, lyricsArray);
+    })
+        .catch(error => console.log(error))
 }
 
-function findSyllables (line) {
-    return new Promise (function (resolve){
+function findSyllables(line) {
+    return new Promise(function (resolve) {
         let syllables = 0;
         SyllaRhyme(function (sr) {
             syllables = sr.syllables(line.raw);
             resolve(syllables);
         });
+    })
+}
+
+function getRhymes(lyricsArray, next) {
+    Promise.all(
+        lyricsArray.map(rhymeGetRequest)
+    ).then(response => {
+        var rhymes = response[1].reduce(function (acc, el) {
+            acc.push(el.word);
+            return acc;
+        }, [])
+        lyricsArray.map(function (el) {
+            el.rhymes = rhymes;
+        })
+        next(null, lyricsArray);
+        // lyricsArray.map(function (el, i) {
+        //     el.rhymes = [r];
+        // })
+    })
+}
+
+
+function rhymeGetRequest(el) {
+    return new Promise(function (resolve) {
+        let rhymes = "";
+        let lookUpWord = el.lastWord;
+        https.get(`https://api.datamuse.com/words?rel_rhy=${lookUpWord}`, function (res) {
+            res.on("data", function (chunk) {
+                rhymes += chunk;
+                rhymes = JSON.parse(rhymes);
+                resolve(rhymes)
+            });
+            res.on("end", function (rhymes) {
+            })
+        })
     })
 }
