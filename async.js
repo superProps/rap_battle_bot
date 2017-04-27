@@ -3,7 +3,7 @@ const MusixmatchApi = require('./build/javascript-client/src/index');
 const defaultClient = MusixmatchApi.ApiClient.instance;
 const key = defaultClient.authentications['key'];
 const _ = require('underscore');
-key.apiKey = '0e33db5e8d277a212d13ded17755c930'; // {String} 
+key.apiKey = '6bb1d096f126e94febca2495960e243f'; // {String} 
 var fs = require('fs');
 var NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
 var SyllaRhyme = require('syllarhyme');
@@ -170,10 +170,10 @@ function getLyricsFromTracks(tracks, next) {
 function getKeywordsFromLyrics(lines, next) {
     //TODO: if there are no keywords, put the lastword in!
     Promise.all(
-        lines.slice(0, 10).map(createNluPromise)
+        lines.slice(0, 5).map(createNluPromise)
     ).then(responses => {
         var finalResult = [];
-        lines.slice(0, 10).forEach((line, i) => {
+        lines.slice(0, 5).forEach((line, i) => {
             var keywords = [];
             responses[i].keywords.forEach(function (el) {
                 keywords.push(el.text);
@@ -233,12 +233,15 @@ function getRhymes(lyricsArray, next) {
     Promise.all(
         lyricsArray.map(rhymeGetRequest)
     ).then(response => {
-        var rhymes = response[1].reduce(function (acc, el) {
-            acc.push(el.word);
-            return acc;
-        }, [])
-        lyricsArray.map(function (el) {
-            el.rhymes = rhymes;
+        let rhymes = response.map(function (el) {
+            return el.reduce(function (acc, el2) {
+                console.log(el2);
+                acc.push(el2.word);
+                return acc;
+            }, []);
+        })
+        lyricsArray.map(function (el, i) {
+            el.rhymes = rhymes[i];
         })
         next(null, lyricsArray);
         // lyricsArray.map(function (el, i) {
