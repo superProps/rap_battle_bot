@@ -24,7 +24,7 @@ const albums = new MusixmatchApi.AlbumApi();
 const tracks = new MusixmatchApi.TrackApi();
 const lyrics = new MusixmatchApi.LyricsApi();
 
-const artist = "nicki minaj";
+const artist = "kendrick lamar";
 
 async.waterfall([
     getArtistId,
@@ -36,8 +36,11 @@ async.waterfall([
     getRhymes
 ],
     function (err, results) {
-        if (err) console.log('aha');
-        console.log(results);
+        if (err) console.log("Final Error: ", err);
+        results = results.filter(function (el) {
+            return el.rhymes.length > 0;
+        });
+        fs.appendFileSync("lyrics.txt", JSON.stringify(results), "UTF-8", { "flags": 'a+' })
         mongoose.connect(db, (err) => {
             if (err) {
                 console.log(err);
@@ -64,7 +67,7 @@ function getArtistId(next) {
     };
     artists.artistSearchGet(ArtistOpts, (error, data, response) => {
         if (error) {
-            // console.error(error);
+            console.error(error);
         } else if (response.text) {
             data = JSON.parse(response.text);
             next(null, data.message.body.artist_list[0].artist.artist_id);
@@ -83,15 +86,13 @@ function getAlbumsFromId(id, next) {
     };
     albums.artistAlbumsGetGet(id, albumOpts, (error, data, response) => {
         if (error) {
-
-            // console.error(error);
+            console.error(error);
         } else if (response.text) {
             let res = [];
             data = JSON.parse(response.text);
             data.message.body.album_list.forEach(function (el) {
                 res.push(el.album.album_id);
             });
-
             next(null, res);
         }
         else {
@@ -141,11 +142,13 @@ function getLyricsFromTracks(tracks, next) {
                 if (data.message.header.status_code === 200) {
                     var lyric = data.message.body.lyrics.lyrics_body.split('\n');
                 }
+                console.log(lyric);
                 done(null, lyric);
             }
             else {
                 throw new Error('bad response');
             }
+
         });
 
 
@@ -154,7 +157,6 @@ function getLyricsFromTracks(tracks, next) {
             return el !== undefined;
         })
         results = results.map(function (el) {
-
             el = el.filter(function (line) {
                 return line.length > 3;
             })
@@ -162,44 +164,52 @@ function getLyricsFromTracks(tracks, next) {
             return _.uniq(el);
         })
         results = _.uniq(_.flatten(results));
+        console.log(results);
         next(null, results);
     });
 }
 
 
 function getKeywordsFromLyrics(lines, next) {
-    //TODO: if there are no keywords, put the lastword in!
     Promise.all(
-        lines.slice(0, 5).map(createNluPromise)
+        lines.slice(0, 99).map(createNluPromise)
     ).then(responses => {
         var finalResult = [];
-        lines.slice(0, 5).forEach((line, i) => {
+        lines.slice(0, 99).forEach((line, i) => {
             var keywords = [];
-            responses[i].keywords.forEach(function (el) {
-                keywords.push(el.text);
-            })
-            var result = {
-                raw: line,
-                keywords: keywords,
-                artist: artist
-            };
-            finalResult.push(result);
+            if (responses[i]) {
+                responses[i].keywords.forEach(function (el) {
+                    keywords.push(el.text);
+                })
+                var result = {
+                    raw: line,
+                    keywords: keywords,
+                    artist: artist
+                };
+                finalResult.push(result);
+            }
         })
         next(null, finalResult);
     })
-        .catch(error => console.log(error))
+        .catch(error => {
+            console.log(error)
+        })
 }
 
 function createNluPromise(line) {
     return new Promise((resolve, reject) => {
+        console.log(line);
         nlu.analyze({
             'html': line,
             'features': {
                 'keywords': {}
             }
         }, function (err, response) {
-            if (err)
-                reject(err);
+            if (err) {
+                console.log("Erro line?", line);
+                // reject(err);
+                resolve();
+            }
             else
                 resolve(response)
         });
@@ -213,6 +223,7 @@ function getNumberOfSyllablesAndLastWord(lyricsArray, next) {
         lyricsArray.map(function (el, i) {
             el.syllables = response[i];
             el.lastWord = el.raw.split(" ").slice(-1)[0].replace(/[^A-z]/g, "");
+            if (el.keywords.length === 0) el.keywords.push(el.lastWord);
         })
         next(null, lyricsArray);
     })
@@ -235,7 +246,6 @@ function getRhymes(lyricsArray, next) {
     ).then(response => {
         let rhymes = response.map(function (el) {
             return el.reduce(function (acc, el2) {
-                console.log(el2);
                 acc.push(el2.word);
                 return acc;
             }, []);
@@ -244,12 +254,8 @@ function getRhymes(lyricsArray, next) {
             el.rhymes = rhymes[i];
         })
         next(null, lyricsArray);
-        // lyricsArray.map(function (el, i) {
-        //     el.rhymes = [r];
-        // })
     })
 }
-
 
 function rhymeGetRequest(el) {
     return new Promise(function (resolve) {
