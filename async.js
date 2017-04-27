@@ -24,7 +24,7 @@ const albums = new MusixmatchApi.AlbumApi();
 const tracks = new MusixmatchApi.TrackApi();
 const lyrics = new MusixmatchApi.LyricsApi();
 
-const artist = "kendrick lamar";
+const artist = "eminem";
 
 async.waterfall([
     getArtistId,
@@ -210,8 +210,10 @@ function createNluPromise(line) {
                 // reject(err);
                 resolve();
             }
-            else
-                resolve(response)
+            else {
+                console.log(response);
+                resolve(response);
+            }
         });
     });
 }
@@ -265,6 +267,7 @@ function rhymeGetRequest(el) {
             res.on("data", function (chunk) {
                 rhymes += chunk;
                 rhymes = JSON.parse(rhymes);
+                console.log(rhymes);
                 resolve(rhymes)
             });
             res.on("end", function (rhymes) {
