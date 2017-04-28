@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const LyricsModel = require('./lyrics_schema');
+const LyricsModel = require('./newSchema');
 const db = 'mongodb://localhost:27017/lyrics';
 const _ = require('underscore');
 const async = require('async');
@@ -11,15 +11,19 @@ function getRandomRap(keyWord) {
         LyricsModel.find({
             keywords: { $all: [keyWord] }
         }, function (error, data) {
+            console.log("!!!", data);
             if (error) return console.log(error);
             data = _.shuffle(data);
             lastWord = data[0].lastWord;
-            var firstLine = data[0].raw;
-            next(null, { firstLine, lastWord })
+            var raw = data[0].raw;
+            var phonemes = data[0].majorPhonemes;       
+            next(null, { raw, lastWord, phonemes })
         });
     }
 
     function getRap (lastWordLyric, next) {
+        // we want to find any lyrics, that
+        console.log("OH GOSH", lastWordLyric.phonemes);
         LyricsModel.find({
             rhymes: { $all: [lastWordLyric.lastWord] }
         }, function (error, data) {
@@ -48,6 +52,6 @@ function getRandomRap(keyWord) {
 
 }
 
-getRandomRap("home");
+getRandomRap("funk");
 
 module.exports = getRandomRap;
