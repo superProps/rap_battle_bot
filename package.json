@@ -28,8 +28,11 @@
   "dependencies": {
     "async": "^2.3.0",
     "mongoose": "^4.9.6",
+    "phoneme-types": "^1.2.2",
+    "phonemenon": "^1.3.1",
     "superagent": "^3.5.2",
     "underscore": "^1.8.3",
-    "watson-developer-cloud": "^2.29.0"
+    "watson-developer-cloud": "^2.29.0",
+    "word-phoneme-map": "^1.4.0"
   }
 }

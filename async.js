@@ -206,6 +206,7 @@ function createNluPromise(line) {
             }
         }, function (err, response) {
             if (err) {
+                console.log(err);
                 console.log("Erro line?", line);
                 // reject(err);
                 resolve();
