@@ -1,5 +1,5 @@
-const DBdata = require('./dataToClean');
-const findPhoneme = require('./findPhoneme');
+const DBdata = require("./dataToClean");
+const findPhoneme = require("./findPhoneme");
 const fs = require("fs");
 const _ = require('underscore');
 
@@ -22,9 +22,9 @@ function cleanData (DBdata) {
             }
             el.majorPhonemes = newInfo.majorPhonemes;
             el.numberOfPhonemes = newInfo.numberOfPhonemes;
-            // artist names uniform => all lower case, take out special characters
+            // artist names uniform => all lower case, TODO: take out special characters
             el.artist = el.artist.toLowerCase();
-            // go into keywords, make sure that each element is one word (rather than a phase). Also make these lowercase and clean data
+            // go into keywords, make sure that each element is one word (rather than a phrase). Also make these lowercase and clean data
             var newKeywords = el.keywords.map(function (el) {
                 // sometimes the keyWord is a phrase
                 if (el.includes(" ")) {
