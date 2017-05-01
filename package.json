@@ -1,0 +1,28 @@
+{
+  "name": "rap_battle_bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha ./spec/",
+    "lint": "eslint ./",
+    "posttest": "npm run lint",
+    "precommit": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/superProps/rap_battle_bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/superProps/rap_battle_bot/issues"
+  },
+  "homepage": "https://github.com/superProps/rap_battle_bot#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "eslint": "^3.19.0",
+    "husky": "^0.13.3",
+    "mocha": "^3.3.0"
+  }
+}
