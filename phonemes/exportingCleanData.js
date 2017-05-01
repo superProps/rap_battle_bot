@@ -1,6 +1,6 @@
 var fs = require('fs');
-var text = fs.readFileSync('./cleanData.txt', "utf8");
+var text = fs.readFileSync('./cleanData6.txt', "utf8");
 
-const newString = "module.exports = [" + text + ']';
+const newString = "[" + text + ']';
 console.log(newString);
-module.exports = newString;
+module.exports = JSON.parse(text);
