@@ -11,3 +11,7 @@ node_modules
 */config
 config
 */**/config
+data
+*/**/data
+*/data
+/data
