@@ -1,7 +1,7 @@
 const findPhoneme = require('./findPhoneme');
 const fs = require('fs');
 const _ = require('underscore');
-const text = fs.readFileSync('./LYRICS_SIXTH_1000.txt', 'utf8');
+const text = fs.readFileSync('../data/LYRICS_SIXTH_1000.txt', 'utf8');
 const newString = '[' + text + ']';
 const DBdata = JSON.parse(newString);
 
@@ -49,7 +49,7 @@ function cleanData(DBdata) {
             console.log(el);
         });
     });
-    fs.appendFileSync('test.txt', JSON.stringify(DBdata), 'UTF-8', { 'flags': 'a+' });
+    fs.appendFileSync('../data/test.txt', JSON.stringify(DBdata), 'UTF-8', { 'flags': 'a+' });
 }
 
 cleanData(DBdata);

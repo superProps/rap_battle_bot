@@ -11,7 +11,7 @@ mongoose.connect(db, (err) => {
   }
   else {
     for (var i = numberOfFiles; i > 0; i--) {
-      var text = fs.readFileSync(`./cleanData${i}.txt`, "utf8");
+      var text = fs.readFileSync(`../data/cleanData${i}.txt`, "utf8");
       let data = JSON.parse(text);
       data.forEach((el) => {
         el.forEach(function (lyric, i) {

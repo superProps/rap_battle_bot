@@ -1,7 +1,7 @@
 var fs = require("fs");
 var path = require('path');
 
-var text = fs.readFileSync("./phonemeData.txt").toString('utf-8');
+var text = fs.readFileSync("../data/phonemeData.txt").toString('utf-8');
 var textByLine = text.split("\n");
 
 
