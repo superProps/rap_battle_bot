@@ -19,12 +19,6 @@
     "url": "https://github.com/superProps/rap_battle_bot/issues"
   },
   "homepage": "https://github.com/superProps/rap_battle_bot#readme",
-  "devDependencies": {
-    "chai": "^3.5.0",
-    "eslint": "^3.19.0",
-    "husky": "^0.13.3",
-    "mocha": "^3.3.0"
-  },
   "dependencies": {
     "async": "^2.3.0",
     "mongoose": "^4.9.6",
@@ -34,5 +28,11 @@
     "underscore": "^1.8.3",
     "watson-developer-cloud": "^2.29.0",
     "word-phoneme-map": "^1.4.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "eslint": "^3.19.0",
+    "husky": "^0.13.3",
+    "mocha": "^3.3.0"
   }
 }
