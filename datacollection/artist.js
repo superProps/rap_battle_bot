@@ -15,16 +15,16 @@ var opts = {
     } else if (response.text) {
 
         data = JSON.parse(response.text);
-        data.message.body.artist_list.forEach(function(el) {
+        data.message.body.artist_list.forEach(function (el) {
             console.log(el.artist.artist_name, el.artist.artist_id);
         });
     }
     else {
-        console.log('hello')
+        console.log('hello');
         
         throw new Error('bad response');   
     }
 });
 
 
-/// album.tracks.get?album_id=13750844&page=1&page_size=2
+// / album.tracks.get?album_id=13750844&page=1&page_size=2
