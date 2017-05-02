@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const LyricsModel = require('./newSchema');
-const db = 'mongodb://localhost:27017/lyrics';
+const db = 'mongodb://localhost:27017/lyricsRapBattle';
 const _ = require('underscore');
 const async = require('async');
 

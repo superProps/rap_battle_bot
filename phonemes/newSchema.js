@@ -12,4 +12,4 @@ var LyricsSchema = new Schema({
   numberOfPhonemes: Number
 });
 
-module.exports = mongoose.model('lyrics', LyricsSchema);
+module.exports = mongoose.model('rapBattleLyrics', LyricsSchema);
