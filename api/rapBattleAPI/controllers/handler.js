@@ -1,9 +1,10 @@
-'use strict';
 const getRandomRap = require('./getRandomRap');
 
 module.exports.getRap = (event, context) => {
+  // context.callbackWaitsForEmptyEventLoop = false;
+  
   const keyWord = event.pathParameters.keyword;
-  getRandomRap(keyWord, function (lyrics) {
+  getRandomRap(keyWord, (lyrics) => {
   const response = {
     statusCode: 200,
     headers: {'Content-Type': 'application/json'},
