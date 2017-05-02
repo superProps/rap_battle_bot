@@ -1,0 +1,17 @@
+{
+  "name": "rap-battle-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.4.0",
+    "aws-sdk": "^2.45.0",
+    "mongoose": "^4.9.6",
+    "underscore": "^1.8.3"
+  }
+}
