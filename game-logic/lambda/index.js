@@ -2,7 +2,35 @@
 let data = require('./data');
 var Alexa = require('alexa-sdk');
 const _ = require('underscore');
+var NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
+const config = require('./config');
 
+
+var nlu = new NaturalLanguageUnderstandingV1({
+    'username': config.josh1Credentials.username,
+    'password': config.josh1Credentials.password,
+    version_date: NaturalLanguageUnderstandingV1.VERSION_DATE_2017_02_27
+});
+
+function createNluPromise(line) {
+    return new Promise((resolve, reject) => {
+        nlu.analyze({
+            'html': line,
+            'features': {
+                'keywords': {}
+            }
+        }, function (err, response) {
+            if (err) {
+                console.log(err);
+                // reject(err);
+            }
+            else {
+                // console.log(response);
+                resolve(response);
+            }
+        });
+    });
+}
 
 exports.handler = function (event, context, callback) {
     var alexa = Alexa.handler(event, context);
@@ -10,8 +38,8 @@ exports.handler = function (event, context, callback) {
     alexa.execute();
 };
 
-const HELP_MESSAGE = 'What\'s up homie, you want to challenge me to a rap battle? Just say a theme to begin';
-const EXIT_MESSAGE = 'Cya later homie';
+var HELP_MESSAGE = 'What\'s up homie, you want to challenge me to a rap battle? Just say a theme to begin';
+var EXIT_MESSAGE = 'Cya later homie';
 
 
 var states = {
@@ -85,7 +113,21 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
             sesh.data = _.shuffle(data)[0];
             var response = sesh.data[1] + ',' + sesh.data[2] + ',' + sesh.data[3] + ',' + sesh.data[4];
             sesh.response = response;
-            this.emitWithState('Battle');
+            let keywords = createNluPromise(sesh.theme)
+            keywords.then((res) => {
+                let themes = _.flatten(res.keywords.map(function (el) {
+                    return el.text;
+                }).map(function (el) {
+                    if (el.includes(' ')) {
+                        return el.split(' ');
+                    }
+                    return el;
+                }));
+
+                this.emit(':ask', `${themes[0]} ${themes[1]}`);
+
+            })
+            // this.emitWithState('Battle');
         }
     },
     'AMAZON.StartOverIntent': function () {
