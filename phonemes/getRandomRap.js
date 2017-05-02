@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const LyricsModel = require('../dbSeed/newSchema');
-const db = 'mongodb://admin:password@54.198.104.223/rapBattleLyrics';
+// const db = 'mongodb://admin:password@54.198.104.223/rapBattleLyrics';
+const db = 'mongodb://localhost:27017/lyricsRapBattle';
 const _ = require('underscore');
 const async = require('async');
 
@@ -23,25 +24,25 @@ function getRandomRap (keyWord) {
         console.log('Results: ', results);
     });
 
-    function getFirstLineAndLastWord(next) {
+    function getFirstLineAndLastWord (next) {
         LyricsModel.find({
-            keywords: { $all: [keyWord] }
+            keywords: {$all: [keyWord]}
         }, function (error, data) {
             if (error) return console.log(error);
             data = _.shuffle(data);
-            lastWord = data[0].lastWord;
-            var firstLine = data[0].raw;
-            next(null, { firstLine, lastWord })
+            let lastWord = data[0].lastWord;
+            let firstLine = data[0].raw;
+            next(null, {firstLine, lastWord});
         });
     }
 
-    function getRap(lastWordLyric, next) {
+    function getRap (lastWordLyric, next) {
         LyricsModel.find({
-            rhymes: { $all: [lastWordLyric.lastWord] }
+            rhymes: {$all: [lastWordLyric.lastWord]}
         }, function (error, data) {
             if (error) return console.log(error);
             data = _.shuffle(data);
-            var newLines = data.slice(0, 3);
+            let newLines = data.slice(0, 3);
             lastWordLyric.newLines = newLines;
             next(null, lastWordLyric);
         });

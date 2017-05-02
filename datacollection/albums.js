@@ -1,9 +1,9 @@
-// var MusixmatchApi = require('../../build/javascript-client/src/index')
-var MusixmatchApi = require('./build/javascript-client/src/index');
-var defaultClient = MusixmatchApi.ApiClient.instance;
-var key = defaultClient.authentications['key'];
+// let MusixmatchApi = require('../../build/javascript-client/src/index')
+let MusixmatchApi = require('./build/javascript-client/src/index');
+let defaultClient = MusixmatchApi.ApiClient.instance;
+let key = defaultClient.authentications['key'];
 key.apiKey = '0e33db5e8d277a212d13ded17755c930'; // {String} 
-var opts = {
+let opts = {
     format: 'json',
     sReleaseDate:'desc',
     gAlbumName: 1
@@ -17,12 +17,12 @@ hello.artistAlbumsGetGet(artistId, opts, (error, data, response) => {
     } else if (response.text) {
         let res = [];
         data = JSON.parse(response.text);
-        data.message.body.album_list.forEach(function(el){
-            res.push(el.album.album_id)
+        data.message.body.album_list.forEach(function (el) {
+            res.push(el.album.album_id);
 
-            console.log(el.album.album_name)
-        })    
-        console.log(res)
+            console.log(el.album.album_name);
+        });    
+        console.log(res);
         return res;
     }
     else {
@@ -30,8 +30,4 @@ hello.artistAlbumsGetGet(artistId, opts, (error, data, response) => {
     }
 });
 
-
-
-
-
-/// album.tracks.get?album_id=13750844&page=1&page_size=2
+// / album.tracks.get?album_id=13750844&page=1&page_size=2
