@@ -1,10 +1,12 @@
 
-let data = require('./data');
-var Alexa = require('alexa-sdk');
+// const data = require('./data');
+const request = require('request-promise');
+const https = require('https');
+const Alexa = require('alexa-sdk');
 const _ = require('underscore');
 var NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
 const config = require('./config');
-
+const async = require('async');
 
 var nlu = new NaturalLanguageUnderstandingV1({
     'username': config.josh1Credentials.username,
@@ -12,7 +14,7 @@ var nlu = new NaturalLanguageUnderstandingV1({
     version_date: NaturalLanguageUnderstandingV1.VERSION_DATE_2017_02_27
 });
 
-function createNluPromise(line) {
+function createNluPromise (line) {
     return new Promise((resolve, reject) => {
         nlu.analyze({
             'html': line,
@@ -31,6 +33,22 @@ function createNluPromise(line) {
         });
     });
 }
+
+async.waterfall([
+                async.apply(getKeywordsFromTheme, 'money love nigga guns drugs women gangster'),
+                getRandomRapFromAPI
+            ], function (err, res) {
+                let formattedRap = {};
+                let rapData =_.shuffle(res)[0];
+                formattedRap[1] = rapData.lyrics.firstLine;
+                for(var i = 0; i < 3; i++){
+                    formattedRap[i + 2] = rapData.lyrics.newLines[i].raw;
+                }
+                // if (err) this.emit(':tell', 'fuck sake, sigh, something went wrong');
+                // this.emit(':ask', `${res}`);
+                console.log(formattedRap)
+            });
+
 
 exports.handler = function (event, context, callback) {
     var alexa = Alexa.handler(event, context);
@@ -102,31 +120,33 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
         this.emit(':ask', speech + sesh.theme, 'bye');
     },
     'ResponseRap': function () {
-        var theme = this.event.request.intent.slots.Themes.value;
+        const theme = this.event.request.intent.slots.Themes.value;
         if (!theme) {
             this.handler.state = states.START;
             this.emitWithState('Start');
         }
         else {
-            var sesh = this.event.session.attributes;
+            const sesh = this.event.session.attributes;
             sesh.theme = theme;
-            sesh.data = _.shuffle(data)[0];
-            var response = sesh.data[1] + ',' + sesh.data[2] + ',' + sesh.data[3] + ',' + sesh.data[4];
-            sesh.response = response;
-            let keywords = createNluPromise(sesh.theme)
-            keywords.then((res) => {
-                let themes = _.flatten(res.keywords.map(function (el) {
-                    return el.text;
-                }).map(function (el) {
-                    if (el.includes(' ')) {
-                        return el.split(' ');
-                    }
-                    return el;
-                }));
+            // sesh.data = _.shuffle(data)[0];
+            async.waterfall([
+                async.apply(getKeywordsFromTheme, theme),
+                getRandomRapFromAPI
+            ], function (err, res) {
+                let formattedRap = {};
+                let rapData = _.shuffle(res)[0];
+                formattedRap[1] = rapData.lyrics.firstLine;
+                for (var i = 0; i < 3; i++){
+                    formattedRap[i + 2] = rapData.lyrics.newLines[i].raw;
+                }
+                if (err) this.emit(':tell', 'fuck sake, sigh, something went wrong');
+                let speech = formattedRap[1];
+                this.emit(':ask', 'speech');
+            });
 
-                this.emit(':ask', `${themes[0]} ${themes[1]}`);
+            // var response = sesh.data[1] + ',' + sesh.data[2] + ',' + sesh.data[3] + ',' + sesh.data[4];
+            // sesh.response = response;
 
-            })
             // this.emitWithState('Battle');
         }
     },
@@ -147,3 +167,82 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
         this.emitWithState('ResponseRap');
     }
 });
+
+
+function getKeywordsFromTheme (themes, next) {
+    let keywords = createNluPromise(themes);
+    keywords.then((res) => {
+        var usersKeywords = _.flatten(res.keywords.map(function (el) {
+            return el.text;
+        }).map(function (el) {
+            if (el.includes(' ')) {
+                return el.split(' ');
+            }
+            return el;
+        }));
+            next(null, usersKeywords);                                                          
+    });
+}
+
+// function getRandomRapFromAPI (usersKeyWords, next) {
+//     let keyword = usersKeyWords[0];
+//     console.log(keyword)
+//     let data = getAPIData(keyword);
+//     data.then((res) => {
+//         console.log(res);
+//         next(null, res.lyrics.firstLine);
+//     });
+// }
+
+// function getAPIData (usersKeywords) {
+//     Promise.all (
+
+//     )
+//             .then((response) => {
+//                 console.log(response)
+//                 resolve(response);
+//             })
+//             .catch((error) => {
+//                 console.log('8****8888**')
+//                 // API Error
+//                 reject('API Error: ', error);
+//             });
+//     });
+// }
+
+// function createPromise (usersKeyWord) {
+//         return new Promise((resolve, reject) => {
+//             console.log('***', usersKeywords)
+//         request({
+//             url: `https://1ceaj2gv49.execute-api.us-east-1.amazonaws.com/dev/rap/${usersKeyWords}`,
+//             method: 'GET',
+//             headers: {
+//                 'Content-Type': 'application/json'
+//             }
+//         })
+//         }, function (err, response) {
+//             resolve(response);
+//         }
+// }
+
+function getAPIData (el) {
+    return new Promise ((resolve) => {
+        let rapData = '';
+        https.get(`https://1ceaj2gv49.execute-api.us-east-1.amazonaws.com/dev/rap/${el}`, function (res) {
+            res.on('data', function (chunk) {
+                rapData += chunk;
+                rapData = JSON.parse(rapData);
+                resolve(rapData);
+            });
+        });
+    });
+}
+
+function getRandomRapFromAPI (usersKeywords, next) {
+    Promise.all(
+        usersKeywords.map(getAPIData)
+    ).then(response => {
+
+        next(null, response);
+    });
+}
