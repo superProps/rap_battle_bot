@@ -1,8 +1,8 @@
-const getRandomRap = require('./getRandomRap');
+const guarenteeRandomRap = require('./guaranteeRandomRap');
 
 module.exports.getRap = (event, context) => {  
   const keyWord = event.pathParameters.keyword;
-  getRandomRap(keyWord, (lyrics) => {
+  guarenteeRandomRap(keyWord, (lyrics) => {
   const response = {
     statusCode: 200,
     headers: {'Content-Type': 'application/json'},
