@@ -1,8 +1,6 @@
 const getRandomRap = require('./getRandomRap');
 
-module.exports.getRap = (event, context) => {
-  // context.callbackWaitsForEmptyEventLoop = false;
-  
+module.exports.getRap = (event, context) => {  
   const keyWord = event.pathParameters.keyword;
   getRandomRap(keyWord, (lyrics) => {
   const response = {
@@ -10,7 +8,6 @@ module.exports.getRap = (event, context) => {
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({lyrics: lyrics})
   };
-
   context.succeed(response);
   });
 };

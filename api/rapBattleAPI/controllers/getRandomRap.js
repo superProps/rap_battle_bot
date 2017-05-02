@@ -4,17 +4,8 @@ const db = 'mongodb://admin:password@54.198.104.223/rapBattleLyrics';
 const _ = require('underscore');
 const async = require('async');
 
-// Maybe grab other random lines for safety. If there are results then just push in random lyrics
-
 function getRandomRap (keyWord, cb) {
-
-    console.log('****GET RANDOM RAP CALLED*****');
-    console.log('**DATABASE**', db);
-    console.log('**KEYWORD PASSED DOWN**', keyWord);
-    console.log('**CB**', cb);
-
     mongoose.connect(db, (err) => {
-        console.log('**IM INSIDE THE MONGOOSE CONNECT PLZ FIND ME**');
         if (err) {
             console.log(err);
         }
@@ -52,7 +43,6 @@ function getRandomRap (keyWord, cb) {
             next(null, lastWordLyric);
         });
     }
-
 }
 
 module.exports = getRandomRap;
