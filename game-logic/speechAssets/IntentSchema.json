@@ -1,0 +1,16 @@
+{
+  "intents": [
+    {
+      "slots": [
+        {
+          "name": "Themes",
+          "type": "LIST_OF_THEMES"
+        }
+      ],
+      "intent": "ResponseRap"
+    },
+    {
+      "intent": "Battle"
+    }
+  ]
+}
