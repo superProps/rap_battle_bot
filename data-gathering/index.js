@@ -5,22 +5,19 @@ const defaultClient = MusixmatchApi.ApiClient.instance;
 const key = defaultClient.authentications['key'];
 const _ = require('underscore');
 key.apiKey = config.musixMatchAPIKey.lukes; // {String} 
-var fs = require('fs');
-var NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
-var SyllaRhyme = require('syllarhyme');
-var https = require('https');
+let fs = require('fs');
+let NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
+let SyllaRhyme = require('syllarhyme');
+let https = require('https');
 const mongoose = require('mongoose');
 const LyricsModel = require('./lyrics_schema');
 const db = config.db.testDB;
 
-
-
-var nlu = new NaturalLanguageUnderstandingV1({
+let nlu = new NaturalLanguageUnderstandingV1({
     'username': config.lukesCredentials.username,
     'password': config.lukesCredentials.password,
     version_date: NaturalLanguageUnderstandingV1.VERSION_DATE_2017_02_27
 });
-
 
 const artists = new MusixmatchApi.ArtistApi();
 const albums = new MusixmatchApi.AlbumApi();
@@ -58,7 +55,6 @@ async.waterfall([
                     console.log(`Lyric ${i} ${doc.raw} saved to db`);
                 });
             });
-
         });
     });
 
@@ -111,7 +107,7 @@ function getAlbumsFromId (id, next) {
 
 function getTracksFromAlbums (albumIds, next) {
     async.mapSeries(albumIds, function (id, done) {
-        var trackOpts = {
+        let trackOpts = {
             format: 'json',
             pageSize: 500
         };
@@ -139,28 +135,24 @@ function getTracksFromAlbums (albumIds, next) {
 
 function getLyricsFromTracks (tracks, next) {
     async.mapSeries(tracks, function (eachTrack, done) {
-        var lyricsOpts = {
+        let lyricsOpts = {
             format: 'json',
         };
         lyrics.trackLyricsGetGet(eachTrack, lyricsOpts, (error, data, response) => {
+            let lyric;
             if (error) {
                 console.error(error);
             } else if (response.text) {
                 data = JSON.parse(response.text);
                 if (data.message.header.status_code === 200) {
-                    var lyric = data.message.body.lyrics.lyrics_body.split('\n');
+                    lyric = data.message.body.lyrics.lyrics_body.split('\n');
                 }
-                // console.log(lyric);
                 done(null, lyric);
             }
             else {
-                throw new Error('bad response')
-                // done(null, [])
+                throw new Error('bad response');
             }
-
         });
-
-
     }, function (error, results) {
         results = results.filter(function (el) {
             return el !== undefined;
@@ -177,20 +169,18 @@ function getLyricsFromTracks (tracks, next) {
     });
 }
 
-
 function getKeywordsFromLyrics (lines, next) {
-    console.log('*****************************************************************', lines.length);
     Promise.all(
         lines.map(createNluPromise)
     ).then(responses => {
-        var finalResult = [];
+        let finalResult = [];
         lines.forEach((line, i) => {
-            var keywords = [];
+            let keywords = [];
             if (responses[i]) {
                 responses[i].keywords.forEach(function (el) {
                     keywords.push(el.text);
                 });
-                var result = {
+                let result = {
                     raw: line,
                     keywords: keywords,
                     artist: artist
@@ -206,8 +196,7 @@ function getKeywordsFromLyrics (lines, next) {
 }
 
 function createNluPromise (line) {
-    return new Promise((resolve, reject) => {
-        // console.log(line);
+    return new Promise((resolve) => {
         nlu.analyze({
             'html': line,
             'features': {
@@ -215,13 +204,10 @@ function createNluPromise (line) {
             }
         }, function (err, response) {
             if (err) {
-                console.log(err);
-                // console.log("Erro line?", line);
-                // reject(err);
+                console.log('Error: ', err);
                 resolve();
             }
             else {
-                // console.log(response);
                 resolve(response);
             }
         });
@@ -276,11 +262,10 @@ function rhymeGetRequest (el) {
         https.get(`https://api.datamuse.com/words?rel_rhy=${lookUpWord}`, function (res) {
             res.on('data', function (chunk) {
                 rhymes += chunk;
-                // console.log(rhymes);
                 rhymes = JSON.parse(rhymes);
                 resolve(rhymes);
             });
-            res.on('end', function (rhymes) {
+            res.on('end', function () {
             });
         });
     });
