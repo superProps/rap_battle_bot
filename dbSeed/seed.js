@@ -1,4 +1,4 @@
-const db = 'mongodb://localhost:27017/lyricsRapBattle';
+const db = 'mongodb://admin:password@54.198.104.223/rapBattleLyrics';
 const LyricsModel = require('./newSchema');
 const mongoose = require('mongoose');
 var fs = require('fs');
