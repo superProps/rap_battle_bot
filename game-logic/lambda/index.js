@@ -1,8 +1,33 @@
-
-let data = require('./data');
+var https = require('https');
 var Alexa = require('alexa-sdk');
-const _ = require('underscore');
+var _ = require('underscore');
+var NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
+var config = require('./config');
+// var async = require('async');
 
+var nlu = new NaturalLanguageUnderstandingV1({
+    'username': config.josh1Credentials.username,
+    'password': config.josh1Credentials.password,
+    version_date: NaturalLanguageUnderstandingV1.VERSION_DATE_2017_02_27
+});
+
+function createNluPromise(line) {
+    return new Promise((resolve, reject) => {
+        nlu.analyze({
+            'html': line,
+            'features': {
+                'keywords': {}
+            }
+        }, function (err, response) {
+            if (err) {
+                reject(err);
+            }
+            else {
+                resolve(response);
+            }
+        });
+    });
+}
 
 exports.handler = function (event, context, callback) {
     var alexa = Alexa.handler(event, context);
@@ -10,8 +35,8 @@ exports.handler = function (event, context, callback) {
     alexa.execute();
 };
 
-const HELP_MESSAGE = 'What\'s up homie, you want to challenge me to a rap battle? Just say a theme to begin';
-const EXIT_MESSAGE = 'Cya later homie';
+var HELP_MESSAGE = 'What\'s up homie, you want to challenge me to a rap battle? Just say a theme to begin';
+var EXIT_MESSAGE = 'Cya later homie';
 
 
 var states = {
@@ -20,7 +45,7 @@ var states = {
 };
 
 
-const handlers = {
+var handlers = {
     'LaunchRequest': function () {
         this.handler.state = states.START;
         this.emitWithState('Start');
@@ -71,21 +96,74 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
     'Battle': function () {
         var sesh = this.event.session.attributes;
         var speech = sesh.response;
-        this.emit(':ask', speech + sesh.theme, 'bye');
+        this.emit(':ask', speech, 'bye');
     },
     'ResponseRap': function () {
         var theme = this.event.request.intent.slots.Themes.value;
         if (!theme) {
             this.handler.state = states.START;
             this.emitWithState('Start');
-        }
-        else {
+        } else {
             var sesh = this.event.session.attributes;
             sesh.theme = theme;
-            sesh.data = _.shuffle(data)[0];
-            var response = sesh.data[1] + ',' + sesh.data[2] + ',' + sesh.data[3] + ',' + sesh.data[4];
-            sesh.response = response;
-            this.emitWithState('Battle');
+            if (theme.split(' ').length === 1) {
+                var rapper = getAPIData(theme);
+                rapper.then((res) => {
+                    var formattedRap = {};
+                    formattedRap[1] = res.lyrics.firstLine;
+                    for (var i = 0; i < 3; i++) {
+                        formattedRap[i + 2] = res.lyrics.newLines[i].raw;
+                    }
+                    var response = formattedRap[1] + ', ' + formattedRap[2] + ', ' + formattedRap[3] + ', ' + formattedRap[4];
+                    sesh.response = response;
+                    this.emitWithState('Battle');
+                })
+                    .catch((err) => {
+                        this.emit(':ask', `ERROR[0] ${err}`);
+                    });
+            }
+            var keywords = createNluPromise(theme);
+            keywords.then((res) => {
+                var themes = _.flatten(res.keywords.map(function (el) {
+                    return el.text;
+                }).map(function (el) {
+                    if (el.includes(' ')) {
+                        return el.split(' ');
+                    }
+                    return el;
+                }));
+                var rapper = getAPIData(themes[0]);
+                rapper.then((res) => {
+                    var formattedRap = {};
+                    formattedRap[1] = res.lyrics.firstLine;
+                    for (var i = 0; i < 3; i++) {
+                        formattedRap[i + 2] = res.lyrics.newLines[i].raw;
+                    }
+                    var response = formattedRap[1] + ',' + formattedRap[2] + ',' + formattedRap[3] + ',' + formattedRap[4];
+                    sesh.response = response;
+                    this.emit(':ask', `${response}`);
+                })
+                    .catch((err) => {
+                        this.emit(':ask', `ERROR[0] ${err}`);
+                    });
+            })
+                .catch((err) => {
+                    var rapper = getAPIData('getMeARandomRapPlease');
+                    rapper.then((res) => {
+                        var formattedRap = {};
+                        formattedRap[1] = res.lyrics.firstLine;
+                        for (var i = 0; i < 3; i++) {
+                            formattedRap[i + 2] = res.lyrics.newLines[i].raw;
+                        }
+                        var response = formattedRap[1] + ',' + formattedRap[2] + ',' + formattedRap[3] + ',' + formattedRap[4];
+                        sesh.response = response;
+                        this.emitWithState('Battle');
+                    })
+                        .catch((err) => {
+                            this.emit(':ask', `err ${JSON.stringify(err)}`);
+
+                        });
+                });
         }
     },
     'AMAZON.StartOverIntent': function () {
@@ -105,3 +183,16 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
         this.emitWithState('ResponseRap');
     }
 });
+
+function getAPIData(el) {
+    return new Promise((resolve, reject) => {
+        var rapData = '';
+        https.get(`https://1ceaj2gv49.execute-api.us-east-1.amazonaws.com/dev/rap/${el}`, function (res) {
+            res.on('data', function (chunk) {
+                rapData += chunk;
+                rapData = JSON.parse(rapData);
+                resolve(rapData);
+            });
+        });
+    });
+}
