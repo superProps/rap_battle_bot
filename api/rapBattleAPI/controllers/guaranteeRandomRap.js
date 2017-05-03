@@ -34,9 +34,9 @@ function guaranteeRandomRap (keyWord, cb) {
                 else if (data.length === 0) return getRandomRap(defaultKeywords[Math.floor(Math.random() * defaultKeywords.length)]);
                 else {
                     data = _.shuffle(data);
-                    var lastWord = data[0].lastWord;
-                    var firstLine = data[0].raw;
-                    var artist = data[0].artist;
+                    const lastWord = data[0].lastWord;
+                    const firstLine = data[0].raw;
+                    const artist = data[0].artist;
                     next(null, {firstLine, artist, lastWord});                
                 }
             });
@@ -54,7 +54,7 @@ function guaranteeRandomRap (keyWord, cb) {
                 else if (data.length < 3) return getRandomRap(defaultKeywords[Math.floor(Math.random() * defaultKeywords.length)]);
                 else {
                     data = _.shuffle(data);
-                    var newLines = data.slice(0,3);
+                    const newLines = data.slice(0,3);
                     lastWordLyric.newLines = newLines;
                     next(null, lastWordLyric);
                 }
