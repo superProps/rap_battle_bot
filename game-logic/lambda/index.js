@@ -1,12 +1,13 @@
+var request = require('request');
 
-// const data = require('./data');
-// const request = require('request-promise');
-const https = require('https');
-const Alexa = require('alexa-sdk');
-const _ = require('underscore');
+// var data = require('./data');
+// var request = require('request-promise');
+var https = require('https');
+var Alexa = require('alexa-sdk');
+var _ = require('underscore');
 var NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
-const config = require('./config');
-const async = require('async');
+var config = require('./config');
+var async = require('async');
 
 var nlu = new NaturalLanguageUnderstandingV1({
     'username': config.josh1Credentials.username,
@@ -33,10 +34,10 @@ function createNluPromise(line) {
         });
     });
 }
-// let keywords = createNluPromise('awodijaowidjoawidj');
+// var keywords = createNluPromise('awodijaowidjoawidj');
 
 // keywords.then((res) => {
-//     let themes = _.flatten(res.keywords.map(function (el) {
+//     var themes = _.flatten(res.keywords.map(function (el) {
 //         return el.text;
 //     }).map(function (el) {
 //         if (el.includes(' ')) {
@@ -44,10 +45,10 @@ function createNluPromise(line) {
 //         }
 //         return el;
 //     }));
-//     let rapper = getAPIData(themes[1]);
+//     var rapper = getAPIData(themes[1]);
 //     rapper.then((res) => {
-//         let formattedRap = {};
-//         // let rapData = _.shuffle(res)[0];
+//         var formattedRap = {};
+//         // var rapData = _.shuffle(res)[0];
 //         formattedRap[1] = res.lyrics.firstLine;
 //         for (var i = 0; i < 3; i++) {
 //             formattedRap[i + 2] = res.lyrics.newLines[i].raw;
@@ -63,10 +64,10 @@ function createNluPromise(line) {
 // })
 //     .catch((err) => {
 //         if (err) {
-//             let rapper = getAPIData('awoij');
+//             var rapper = getAPIData('awoij');
 //             rapper.then((res) => {
-//                 let formattedRap = {};
-//                 // let rapData = _.shuffle(res)[0];
+//                 var formattedRap = {};
+//                 // var rapData = _.shuffle(res)[0];
 //                 formattedRap[1] = res.lyrics.firstLine;
 //                 for (var i = 0; i < 3; i++) {
 //                     formattedRap[i + 2] = res.lyrics.newLines[i].raw;
@@ -95,7 +96,7 @@ var states = {
 };
 
 
-const handlers = {
+var handlers = {
     'LaunchRequest': function () {
         this.handler.state = states.START;
         this.emitWithState('Start');
@@ -145,20 +146,22 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
     },
     'Battle': function () {
         var sesh = this.event.session.attributes;
-        var speech = sesh.responseRand;
+        var speech = sesh.response;
         this.emit(':ask', speech, 'bye');
     },
     'ResponseRap': function () {
-        const theme = this.event.request.intent.slots.Themes.value;
+        var theme = this.event.request.intent.slots.Themes.value;
         if (!theme) {
             this.handler.state = states.START;
             this.emitWithState('Start');
         } else {
-            const sesh = this.event.session.attributes;
+            var sesh = this.event.session.attributes;
             sesh.theme = theme;
-            let keywords = createNluPromise(theme);
+            var keywords = createNluPromise(theme);
             keywords.then((res) => {
-                let themes = _.flatten(res.keywords.map(function (el) {
+                // THIS EMIT STATEMENT DEFIENITELY WORKS
+                // this.emit(':ask', `resHERE ${res}`);
+                var themes = _.flatten(res.keywords.map(function (el) {
                     return el.text;
                 }).map(function (el) {
                     if (el.includes(' ')) {
@@ -166,34 +169,60 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
                     }
                     return el;
                 }));
-                let rapper = getAPIData(themes[0]);
+                // THIS ALSO DEFEINITELY WORKS an 'res money'
+                // this.emit(':ask', `res ${themes[0]}`);
+                var rapper = getAPIData(themes[0]);
+                // this.emit(':ask', `rapper ${rapper}`);
                 rapper.then((res) => {
-                    let formattedRap = {};
+                    // this.emit(':ask', `res ${res}`);
+                    var formattedRap = {};
                     formattedRap[1] = res.lyrics.firstLine;
                     for (var i = 0; i < 3; i++) {
                         formattedRap[i + 2] = res.lyrics.newLines[i].raw;
                     }
                     var response = formattedRap[1] + ',' + formattedRap[2] + ',' + formattedRap[3] + ',' + formattedRap[4];
                     sesh.response = response;
-                    this.emitWithState('Battle');
-                });
+                    this.emit(':ask', `${response}`);
+                })
+                    .catch((err) => {
+                        this.emit(':ask', `ERROR[0] ${err}`);
+                    })
             })
                 .catch((err) => {
-                    if (err) {
-                        let rapper = getAPIData('awoij');
-                        rapper.then((res) => {
-                            let formattedRap = {};
-                            // let rapData = _.shuffle(res)[0];
-                            formattedRap[1] = res.lyrics.firstLine;
-                            for (var i = 0; i < 3; i++) {
-                                formattedRap[i + 2] = res.lyrics.newLines[i].raw;
-                            }
-                            var response = formattedRap[1] + ',' + formattedRap[2] + ',' + formattedRap[3] + ',' + formattedRap[4];
-                            sesh.response = response;
-                            this.emitWithState('Battle');
+                    // error is definitely in this block, it runs the emit statement below, but not the rest of the code.
+                    // this.emit(':ask', `err ${JSON.stringify(err)}`);
+                    // this.emit(':ask', `err 3 ${JSON.stringify(err)}`);
+
+
+                    var rapper = getAPIData('getMeARandomRapPlease');
+                    // the line below currently shows an empty object when you run it with ksbdfksdbfkhsdbfksdfb
+                    // this.emit(':ask', `rapper ${JSON.stringify(rapper)}`);
+                    rapper.then((res) => {
+
+                        // THIS WORDS, when you enter kdsjgbsjfboeubeourb, it gets the correct response on the line below!
+                        // this.emit(':ask', `res2 ${JSON.stringify(res.lyrics)}`);
+                        // var firstLine = res.lyrics.firstLine;
+                        // this.emit(':ask', `res2 ${JSON.stringify(res)}`);
+
+                        var formattedRap = {};
+                        formattedRap[1] = res.lyrics.firstLine;
+                        for (var i = 0; i < 3; i++) {
+                            formattedRap[i + 2] = res.lyrics.newLines[i].raw;
+                        }
+                        // this.emit(':ask', `formattedRap ${JSON.stringify(formattedRap)}`);
+
+                        var response = formattedRap[1] + ',' + formattedRap[2] + ',' + formattedRap[3] + ',' + formattedRap[4];
+                        sesh.response = response;
+                    this.emit(':ask', `${response}`);
+                    })
+                        .catch((err) => {
+                            // never reaches this...
+                            this.emit(':ask', `err ${JSON.stringify(err)}`);
+
                         });
-                    }
                 });
+            // this.emit(':ask', `last thinginginging`);
+
         }
         // else {
         //     // sesh.data = _.shuffle(data)[0];
@@ -201,14 +230,14 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
         //     async.apply(getKeywordsFromTheme, 'money love nigga guns drugs women gangster'),
         //     getRandomRapFromAPI
         // ], function (err, res) {
-        // let formattedRap = {};
-        // let rapData = _.shuffle(res)[0];
+        // var formattedRap = {};
+        // var rapData = _.shuffle(res)[0];
         // formattedRap[1] = rapData.lyrics.firstLine;
         // for (var i = 0; i < 3; i++){
         //     formattedRap[i + 2] = rapData.lyrics.newLines[i].raw;
         // }
         // if (err) this.emit(':tell', 'fuck sake, sigh, something went wrong');
-        // let speech = formattedRap[1];
+        // var speech = formattedRap[1];
         // this.emit(':ask', 'speech');
         // });
 
@@ -235,7 +264,7 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
 
 
 // function getKeywordsFromTheme (themes, next) {
-//     let keywords = createNluPromise(themes);
+//     var keywords = createNluPromise(themes);
 //     keywords.then((res) => {
 //         var usersKeywords = _.flatten(res.keywords.map(function (el) {
 //             return el.text;
@@ -250,9 +279,9 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
 // }
 
 // function getRandomRapFromAPI (usersKeyWords, next) {
-//     let keyword = usersKeyWords[0];
+//     var keyword = usersKeyWords[0];
 //     console.log(keyword)
-//     let data = getAPIData(keyword);
+//     var data = getAPIData(keyword);
 //     data.then((res) => {
 //         console.log(res);
 //         next(null, res.lyrics.firstLine);
@@ -291,8 +320,18 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
 // }
 
 function getAPIData(el) {
-    return new Promise((resolve) => {
-        let rapData = '';
+
+
+    return new Promise((resolve, reject) => {
+        // request(`https://1ceaj2gv49.execute-api.us-east-1.amazonaws.com/dev/rap/${el}`, function (error, response, body) {
+        //     console.log('error:', error); // Print the error if one occurred 
+        //     console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received 
+        //     console.log('body:', body); // Print the HTML for the Google homepage.
+        //     if (error) reject(error);
+        //     else resolve(response);
+        // });
+
+        var rapData = '';
         https.get(`https://1ceaj2gv49.execute-api.us-east-1.amazonaws.com/dev/rap/${el}`, function (res) {
             res.on('data', function (chunk) {
                 rapData += chunk;
@@ -302,6 +341,13 @@ function getAPIData(el) {
         });
     });
 }
+
+// request(`https://1ceaj2gv49.execute-api.us-east-1.amazonaws.com/dev/rap/${el}`, function (error, response, body) {
+//   console.log('error:', error); // Print the error if one occurred 
+//   console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received 
+//   console.log('body:', body); // Print the HTML for the Google homepage. 
+// });
+
 
 // function getRandomRapFromAPI (usersKeywords, next) {
 //     Promise.all(
