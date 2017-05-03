@@ -71,6 +71,6 @@ function getRandomRap(keyWord) {
     }
 }
 
-getRandomRap('bin');
+getRandomRap('headphones');
 
 module.exports = getRandomRap;
