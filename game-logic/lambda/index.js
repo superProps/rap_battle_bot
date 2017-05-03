@@ -106,6 +106,22 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
         } else {
             var sesh = this.event.session.attributes;
             sesh.theme = theme;
+            if (theme.split(' ').length === 1) {
+                var rapper = getAPIData(theme);
+                rapper.then((res) => {
+                    var formattedRap = {};
+                    formattedRap[1] = res.lyrics.firstLine;
+                    for (var i = 0; i < 3; i++) {
+                        formattedRap[i + 2] = res.lyrics.newLines[i].raw;
+                    }
+                    var response = formattedRap[1] + ',' + formattedRap[2] + ',' + formattedRap[3] + ',' + formattedRap[4];
+                    sesh.response = response;
+                    this.emit(':ask', `${response}`);
+                })
+                    .catch((err) => {
+                        this.emit(':ask', `ERROR[0] ${err}`);
+                    });
+            }
             var keywords = createNluPromise(theme);
             keywords.then((res) => {
                 var themes = _.flatten(res.keywords.map(function (el) {
