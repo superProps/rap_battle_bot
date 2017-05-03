@@ -1,9 +1,10 @@
+// const db = 'mongodb://admin:password@54.198.104.223/rapBattleLyrics'
 const db = 'mongodb://localhost:27017/lyricsRapBattle';
 const LyricsModel = require('./newSchema');
 const mongoose = require('mongoose');
 var fs = require('fs');
 
-let numberOfFiles = 6;
+let numberOfFiles = 10;
 
 mongoose.connect(db, (err) => {
   if (err) {
@@ -11,7 +12,7 @@ mongoose.connect(db, (err) => {
   }
   else {
     for (var i = numberOfFiles; i > 0; i--) {
-      var text = fs.readFileSync(`../data/cleanData${i}.txt`, "utf8");
+      var text = fs.readFileSync(`../data/cleanData${i}.txt`, 'utf8');
       let data = JSON.parse(text);
       data.forEach((el) => {
         el.forEach(function (lyric, i) {
