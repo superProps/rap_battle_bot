@@ -6,8 +6,11 @@ const fs = require('fs');
 const async = require('async');
 const path = require('path');
 
-function postRapToTwitter (rapObject, cb) {
+function postRapToTwitter (rapObject) {
     console.log('POST RAP TO TWITTER HAS BEEN CALLED');
+    let artists = [rapObject.artist, rapObject.newLines[0].artist, rapObject.newLines[1].artist, rapObject.newLines[2].artist];
+    artists = artists.map((artist) => artist.replace(/\s+|\-/g,''));
+    
     async.waterfall(
         [
         createRapImage,
@@ -17,7 +20,6 @@ function postRapToTwitter (rapObject, cb) {
             if (error) console.log(error);
             else {
                 console.log('Process Complete');
-                cb();
             }
         }
     );
@@ -35,9 +37,9 @@ function postRapToTwitter (rapObject, cb) {
             .then(function (font) {
                 return new Promise(function (resolve) {
                     return loadedImage
-                    .print(font, 120, 70, filter.clean(rapObject.firstLine), 480)
-                    .print(font, 120, 120, filter.clean(rapObject.newLines[0].raw), 480)
-                    .print(font, 120, 170, filter.clean(rapObject.newLines[1].raw), 480)
+                    .print(font, 120, 70, filter.clean(rapObject.firstLine + ','), 480)
+                    .print(font, 120, 120, filter.clean(rapObject.newLines[0].raw + ','), 480)
+                    .print(font, 120, 170, filter.clean(rapObject.newLines[1].raw + ','), 480)
                     .print(font, 120, 220, filter.clean(rapObject.newLines[2].raw), 480)
                     .write('/tmp/newRap.jpg', function () {
                         resolve();
@@ -71,7 +73,7 @@ function postRapToTwitter (rapObject, cb) {
             T.post('media/metadata/create', meta_params, function (err) {
                 if (!err) {
 
-                const params = {status: '', media_ids: [mediaIdStr]};
+                const params = {status: `#${artists[0]} #${artists[1]} #${artists[2]} #${artists[3]}`, media_ids: [mediaIdStr]};
 
                 T.post('statuses/update', params, function () {
                     console.log('Tweet Posted!');

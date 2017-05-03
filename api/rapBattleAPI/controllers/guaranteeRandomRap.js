@@ -3,12 +3,12 @@ const LyricsModel = require('./lyricsSchema');
 const db = 'mongodb://admin:password@54.198.104.223/rapBattleLyrics';
 const _ = require('underscore');
 const async = require('async');
-const postRapToTwitter = require('../twitter-bot/postRapToTwitter');
 
-const defaultKeywords = ['money', 'dick', 'bling', 'hood', 'streets', 'vodka', 'got', 'hello', 'my', 'to'];
+const defaultKeywords = ['money', 'drink', 'girls', 'gun', 'titty', 'hood', 'lyrics'];
 
 function guaranteeRandomRap (keyWord, cb) {
     let counter = 0;
+    keyWord = keyWord.toLowerCase();
 
     mongoose.connect(db, (err) => {
         if (err) {
@@ -24,10 +24,8 @@ function guaranteeRandomRap (keyWord, cb) {
             getRap
         ], function (err, results) {
             if (err) console.log(err);
-            postRapToTwitter(results, function () {
                 cb(results);
             });
-        });
 
         function getFirstLineAndLastWord (next) {
             LyricsModel.find({
