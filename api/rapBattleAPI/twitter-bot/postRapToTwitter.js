@@ -6,8 +6,8 @@ const fs = require('fs');
 const async = require('async');
 const path = require('path');
 
-function postRapToTwitter (rapObject) {
-
+function postRapToTwitter (rapObject, cb) {
+    console.log('POST RAP TO TWITTER HAS BEEN CALLED');
     async.waterfall(
         [
         createRapImage,
@@ -15,11 +15,15 @@ function postRapToTwitter (rapObject) {
         ], 
         function (error) {
             if (error) console.log(error);
-            else {return console.log('Process Complete');}
+            else {
+                console.log('Process Complete');
+                cb();
+            }
         }
     );
 
     function createRapImage (callback) {
+        console.log('CREATE IMAGE CALLED');
         let loadedImage;
         const templates = ['newtemp1.jpg','newtemp2.jpg', 'newtemp3.jpg', 'newtemp4.jpg'];
         const background = templates[Math.floor(Math.random() * templates.length)];
@@ -35,7 +39,7 @@ function postRapToTwitter (rapObject) {
                     .print(font, 120, 120, filter.clean(rapObject.newLines[0].raw), 480)
                     .print(font, 120, 170, filter.clean(rapObject.newLines[1].raw), 480)
                     .print(font, 120, 220, filter.clean(rapObject.newLines[2].raw), 480)
-                    .write('newRap.jpg', function () {
+                    .write('/tmp/newRap.jpg', function () {
                         resolve();
                     });
                 });
@@ -50,13 +54,14 @@ function postRapToTwitter (rapObject) {
     }
 
     function createTweet (callback) {
+        console.log('CREATE TWEET CALLED');
         const T = new Twit({
             consumer_key: process.env.CONSUMER_KEY,
             consumer_secret: process.env.CONSUMER_SECRET,
             access_token: process.env.ACCESS_TOKEN,
             access_token_secret: process.env.ACCESS_TOKEN_SECRET
         });
-        const b64content = fs.readFileSync('newRap.jpg', {encoding: 'base64'});
+        const b64content = fs.readFileSync('/tmp/newRap.jpg', {encoding: 'base64'});
         
         T.post('media/upload', {media_data: b64content}, function (err, data) {
             const mediaIdStr = data.media_id_string;
@@ -70,7 +75,7 @@ function postRapToTwitter (rapObject) {
 
                 T.post('statuses/update', params, function () {
                     console.log('Tweet Posted!');
-                    var filePath = 'newRap.jpg'; 
+                    var filePath = '/tmp/newRap.jpg'; 
                     fs.unlinkSync(filePath);
                     console.log('Image Deleted from File System!');
                     callback();

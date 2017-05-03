@@ -24,8 +24,9 @@ function guaranteeRandomRap (keyWord, cb) {
             getRap
         ], function (err, results) {
             if (err) console.log(err);
-            postRapToTwitter(results);
-            cb(results);
+            postRapToTwitter(results, function () {
+                cb(results);
+            });
         });
 
         function getFirstLineAndLastWord (next) {
