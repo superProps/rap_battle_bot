@@ -3,7 +3,7 @@ var Alexa = require('alexa-sdk');
 var _ = require('underscore');
 var NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
 var config = require('./config');
-var async = require('async');
+// var async = require('async');
 
 var nlu = new NaturalLanguageUnderstandingV1({
     'username': config.josh1Credentials.username,
@@ -114,9 +114,9 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
                     for (var i = 0; i < 3; i++) {
                         formattedRap[i + 2] = res.lyrics.newLines[i].raw;
                     }
-                    var response = formattedRap[1] + ',' + formattedRap[2] + ',' + formattedRap[3] + ',' + formattedRap[4];
+                    var response = formattedRap[1] + ', ' + formattedRap[2] + ', ' + formattedRap[3] + ', ' + formattedRap[4];
                     sesh.response = response;
-                    this.emit(':ask', `${response}`);
+                    this.emitWithState('Battle');
                 })
                     .catch((err) => {
                         this.emit(':ask', `ERROR[0] ${err}`);
@@ -157,7 +157,7 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
                         }
                         var response = formattedRap[1] + ',' + formattedRap[2] + ',' + formattedRap[3] + ',' + formattedRap[4];
                         sesh.response = response;
-                        this.emit(':ask', `${response}`);
+                        this.emitWithState('Battle');
                     })
                         .catch((err) => {
                             this.emit(':ask', `err ${JSON.stringify(err)}`);
