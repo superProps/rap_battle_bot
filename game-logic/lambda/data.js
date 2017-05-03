@@ -106,12 +106,10 @@ const data = {
         }]
     }
 
-}
-
-
+};
 
 let raps = [];
-function getRapFromData(obj) {
+function getRapFromData (obj) {
 
     for (var key in obj) {
         let rap = {};

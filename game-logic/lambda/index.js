@@ -1,10 +1,9 @@
-
 let data = require('./data');
 var Alexa = require('alexa-sdk');
 const _ = require('underscore');
 
 
-exports.handler = function (event, context, callback) {
+exports.handler = function (event, context) {
     var alexa = Alexa.handler(event, context);
     alexa.registerHandlers(handlers, startHandlers, battleHandlers);
     alexa.execute();
