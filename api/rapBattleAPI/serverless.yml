@@ -6,9 +6,13 @@ provider:
 
 functions:
   getRandomRap:
-    handler: controllers/handler.getRap
+    handler: controllers/getRap.handler
     events: 
       - http:
           path: rap/{keyword}
           method: get 
           cors: true
+  postRapToTwitter:
+    handler: controllers/postRapToTweet.handler
+    events:
+      - sns: arn:aws:sns:us-east-1:929569807000:tweet

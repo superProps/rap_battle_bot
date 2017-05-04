@@ -1,3 +1,4 @@
+let data = require('./data');
 var https = require('https');
 var Alexa = require('alexa-sdk');
 var _ = require('underscore');
@@ -29,7 +30,7 @@ function createNluPromise(line) {
     });
 }
 
-exports.handler = function (event, context, callback) {
+exports.handler = function (event, context) {
     var alexa = Alexa.handler(event, context);
     alexa.registerHandlers(handlers, startHandlers, battleHandlers);
     alexa.execute();

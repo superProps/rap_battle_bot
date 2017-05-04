@@ -29,6 +29,3 @@ mongoose.connect(db, (err) => {
     }
   }
 });
-
-
-
