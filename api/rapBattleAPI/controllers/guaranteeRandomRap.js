@@ -5,7 +5,7 @@ const db = 'mongodb://localhost:27017/lyricsRapBattle';
 const _ = require('underscore');
 const async = require('async');
 
-const defaultKeywords = ['money', 'dick', 'bling', 'hood', 'streets', 'vodka', 'got', 'hello', 'my', 'to'];
+const defaultKeywords = ['money', 'dick', 'bling', 'hood', 'streets', 'vodka', 'got', 'hello'];
 
 // make sure that each last word of the rap is unique
 
@@ -28,8 +28,12 @@ function getRandomRap(keyWord) {
         getRap
     ], function (err, results) {
         if (err) console.log(err);
-        // console.log(results);
-        return results;
+        // console.log(results);results.newLines.raw
+        console.log(results.newLines);
+        // results.newLines.forEach(function (el) {
+        //     console.log(el.raw)
+        // })
+
     });
 
     function getFirstLineAndLastWord(next) {
@@ -63,52 +67,64 @@ function getRandomRap(keyWord) {
                 let rap = [];
                 let lastWordsArray = [];
                 let counter = 0;
-
+                let dataDefined = true;
                 data = _.shuffle(data);
                 rap.push(lastWordLyric.firstLine);
 
                 lastWordsArray.push(lastWordLyric.lastWord);
 
-                while (rap.length < 4) {
-                    if (!data[counter]) {
-                        console.log("Data length was undefined");
-                        // console.log("RAP SO FAR", rap);
-                        let randomWord = defaultKeywords[Math.floor(Math.random() * defaultKeywords.length)];
-                        console.log(randomWord);
-                        LyricsModel.find({
-                            rhymes: { $all: [randomWord] }
-                        }, function (error, data) {
-                            if (error) return console.log(error);
-                            console.log("DATA!!!!!!!", data);
-                            if (rap.length === 1) {
-                                // push in three random lyrics that rhyme together
-                                rap.push(data.slice(0, 3));
-                                counter += 4;
+                let unduplicatedData = getCommonRapsPromise();
+                unduplicatedData.then((res) => {
+                    while (rap.length < 4) {
+                        if (!data[counter]) {
+                            data = res;
+                            console.log("Data length was undefined");
+                            dataDefined = false;
+                            if (rap.length > 1) {
+                                rap = rap.slice(0, 2);
                             }
-                            else {
-                                // take two from rap 
-                                // add two random ones => getRandomRap(defaultKeywords[Math.floor(Math.random() * defaultKeywords.length)]
-                                rap.push(data.slice(0, 2));
-                                counter += 4;
-                            }
-                        });
+                        }
+                        if (!_.contains(lastWordsArray, data[counter].lastWord)) {
+                            rap.push(data[counter].raw);
+                            lastWordsArray.push(data[counter].lastWord);
+                        }
+                        counter++;
                     }
-                    else if (!_.contains(lastWordsArray, data[counter].lastWord)) {
-                        rap.push(data[counter].raw);
-                        lastWordsArray.push(data[counter].lastWord);
+                    // swaps first line for second, to improve rap flow and rhyming pattern
+                    const newLines = rap;
+                    if (dataDefined === false) {
+                        let temp1 = rap[0];
+                        let temp2 = rap[1];
+                        rap[0] = temp2;
+                        rap[1] = temp1;
                     }
-                    counter++;
-                }
-                console.log("OUR RAP", rap);
-                const newLines = data.slice(0, 3);
-                lastWordLyric.newLines = newLines;
-                next(null, lastWordLyric);
+                    lastWordLyric.newLines = newLines;
+                    next(null, lastWordLyric);
+                });
             }
         });
     }
 }
 // }
 
+// function checkLastWord(lastWordsArray, ) {
+
+// }
+
 getRandomRap('guns');
+
+function getCommonRapsPromise() {
+    const defaultKeywords = ['money', 'sling', 'er', 'tick', 'south', 'blue', 'invoke'];
+    return new Promise(function (resolve, reject) {
+        let randomWord = defaultKeywords[Math.floor(Math.random() * defaultKeywords.length)];
+        LyricsModel.find({
+            rhymes: { $all: [randomWord] }
+        }, function (error, data) {
+            if (error) reject(error);
+            // console.log(data);
+            resolve(data);
+        });
+    });
+}
 
 // module.exports = guaranteeRandomRap;
