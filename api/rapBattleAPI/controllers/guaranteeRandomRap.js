@@ -16,6 +16,7 @@ function guaranteeRandomRap (keyWord, cb) {
         }
         else console.log(`connected to ${process.env.DB}`);
     });
+    
     return getRandomRap(keyWord);
     
     function getRandomRap (keyWord) {
@@ -34,6 +35,7 @@ function guaranteeRandomRap (keyWord, cb) {
             LyricsModel.find({
                 keywords: {$all: [keyWord]}
             }, function (error, data) {
+
                 if (error) return console.log(error);
                 else if (data.length === 0) return getRandomRap(defaultKeywords[Math.floor(Math.random() * defaultKeywords.length)]);
                 else {
@@ -57,39 +59,71 @@ function guaranteeRandomRap (keyWord, cb) {
                 }
                 else if (data.length < 3) return getRandomRap(defaultKeywords[Math.floor(Math.random() * defaultKeywords.length)]);
                 else {
+                    let rap = [];
+                    let lastWordsArray = [];
+                    let i = 0;
+                    let dataDefined = true;
                     data = _.shuffle(data);
-                    const newLines = data.slice(0, 3);
-                    lastWordLyric.newLines = newLines;
-                    next(null, lastWordLyric);
+                    rap.push({line: lastWordLyric.firstLine, artist: lastWordLyric.artist});
+
+                    lastWordsArray.push(lastWordLyric.lastWord.toLowerCase());
+
+                    let unduplicatedData = getCommonRapsPromise();
+                    unduplicatedData.then((res) => {
+                        while (rap.length < 4) {
+                            if (!data[i]) {
+                                data = res;
+                                dataDefined = false;
+                                if (rap.length > 1) {
+                                    rap = rap.slice(0, 2);
+                                }
+                            }
+                            if (!_.contains(lastWordsArray, data[i].lastWord.toLowerCase())) {
+                                rap.push({line: data[i].raw, artist: data[i].artist});
+                                lastWordsArray.push(data[i].lastWord.toLowerCase());
+                            }
+                            i++;
+                        }
+                        // swaps first line for second, to improve rap flow and rhyming pattern
+                        if (dataDefined === false) {
+                            let temp1 = rap[0];
+                            let temp2 = rap[1];
+                            rap[0] = temp2;
+                            rap[1] = temp1;
+                        }
+                        next(null, rap);
+                    })
+                        .catch((err) => {
+                            console.log(err);
+                            return getRandomRap(keyWord);
+                        });
                 }
             });
         }
     }
 }
 
-function getLineArtistPairs (rap) {
-    const result = [];
-    result.push({
-        line: rap.firstLine,
-        artist: rap.artist
-    });
-    rap.newLines.forEach((line) => {
-        result.push({
-            line: line.raw,
-            artist: line.artist
-        });
-    });
-    return result;
-}
-
 function publishToSNS (rap, cb) {
     var sns = new AWS.SNS();
     var params = {
-        Message: JSON.stringify(getLineArtistPairs(rap)),
+        Message: JSON.stringify(rap),
         Subject: 'Rap from API',
         TopicArn: 'arn:aws:sns:us-east-1:929569807000:tweet'
     };
     sns.publish(params, cb);
+}
+
+function getCommonRapsPromise () {
+    const defaultKeywords = ['money', 'sling', 'er', 'tick', 'south', 'blue', 'invoke'];
+    return new Promise(function (resolve, reject) {
+        let randomWord = defaultKeywords[Math.floor(Math.random() * defaultKeywords.length)];
+        LyricsModel.find({
+            rhymes: {$all: [randomWord]}
+        }, function (error, data) {
+            if (error) reject(error);
+            resolve(data);
+        });
+    });
 }
 
 module.exports = guaranteeRandomRap;

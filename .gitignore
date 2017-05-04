@@ -4,3 +4,7 @@ phonemes/*.txt
 */**/node_modules
 config
 data
+game-logic/lambda/hello.zip
+game-logic/lambda/node_modules
+game-logic/lambda/*.zip
+game-logic/lambda/config.js
