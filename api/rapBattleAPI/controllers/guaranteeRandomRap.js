@@ -7,10 +7,8 @@ const async = require('async');
 
 const defaultKeywords = ['money', 'dick', 'bling', 'hood', 'streets', 'vodka', 'got', 'hello'];
 
-// make sure that each last word of the rap is unique
-
 // function guaranteeRandomRap (keyWord, cb) {
-//     let counter = 0;
+//     let counter = 0; 
 
 mongoose.connect(db, (err) => {
     if (err) {
@@ -69,9 +67,9 @@ function getRandomRap(keyWord) {
                 let counter = 0;
                 let dataDefined = true;
                 data = _.shuffle(data);
-                rap.push(lastWordLyric.firstLine);
+                rap.push({line: lastWordLyric.firstLine, artist: lastWordLyric.artist});
 
-                lastWordsArray.push(lastWordLyric.lastWord);
+                lastWordsArray.push(lastWordLyric.lastWord.toLowerCase());
 
                 let unduplicatedData = getCommonRapsPromise();
                 unduplicatedData.then((res) => {
@@ -84,9 +82,9 @@ function getRandomRap(keyWord) {
                                 rap = rap.slice(0, 2);
                             }
                         }
-                        if (!_.contains(lastWordsArray, data[counter].lastWord)) {
-                            rap.push(data[counter].raw);
-                            lastWordsArray.push(data[counter].lastWord);
+                        if (!_.contains(lastWordsArray, data[counter].lastWord.toLowerCase())) {
+                            rap.push({line: data[counter].raw, artist: data[counter].artist});
+                            lastWordsArray.push(data[counter].lastWord.toLowerCase());
                         }
                         counter++;
                     }
@@ -100,6 +98,10 @@ function getRandomRap(keyWord) {
                     }
                     lastWordLyric.newLines = newLines;
                     next(null, lastWordLyric);
+                })
+                .catch((err) => {
+                    console.log(err);
+                    return getRandomRap(keyWord);
                 });
             }
         });
@@ -111,7 +113,7 @@ function getRandomRap(keyWord) {
 
 // }
 
-getRandomRap('guns');
+getRandomRap('cosmopolitan');
 
 function getCommonRapsPromise() {
     const defaultKeywords = ['money', 'sling', 'er', 'tick', 'south', 'blue', 'invoke'];
