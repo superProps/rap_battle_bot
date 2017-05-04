@@ -6,9 +6,8 @@ const fs = require('fs');
 const async = require('async');
 const path = require('path');
 
-function postRapToTwitter (rapObject) {
-    console.log('POST RAP TO TWITTER HAS BEEN CALLED');
-    let artists = [rapObject.artist, rapObject.newLines[0].artist, rapObject.newLines[1].artist, rapObject.newLines[2].artist];
+function postRapToTwitter (rapObject, cb) {
+    let artists = [rapObject[0].artist, rapObject[1].artist, rapObject[2].artist, rapObject[3].artist];
     artists = artists.map((artist) => artist.replace(/\s+|\-/g,''));
     
     async.waterfall(
@@ -19,13 +18,12 @@ function postRapToTwitter (rapObject) {
         function (error) {
             if (error) console.log(error);
             else {
-                console.log('Process Complete');
+                cb();
             }
         }
     );
 
     function createRapImage (callback) {
-        console.log('CREATE IMAGE CALLED');
         let loadedImage;
         const templates = ['newtemp1.jpg','newtemp2.jpg', 'newtemp3.jpg', 'newtemp4.jpg'];
         const background = templates[Math.floor(Math.random() * templates.length)];
@@ -37,17 +35,16 @@ function postRapToTwitter (rapObject) {
             .then(function (font) {
                 return new Promise(function (resolve) {
                     return loadedImage
-                    .print(font, 120, 70, filter.clean(rapObject.firstLine + ','), 480)
-                    .print(font, 120, 120, filter.clean(rapObject.newLines[0].raw + ','), 480)
-                    .print(font, 120, 170, filter.clean(rapObject.newLines[1].raw + ','), 480)
-                    .print(font, 120, 220, filter.clean(rapObject.newLines[2].raw), 480)
+                    .print(font, 120, 70, filter.clean(rapObject[0].line + ','), 480)
+                    .print(font, 120, 120, filter.clean(rapObject[1].line + ','), 480)
+                    .print(font, 120, 170, filter.clean(rapObject[2].line + ','), 480)
+                    .print(font, 120, 220, filter.clean(rapObject[3].line), 480)
                     .write('/tmp/newRap.jpg', function () {
                         resolve();
                     });
                 });
             })
             .then(function () {
-                console.log('Image Created');
                 callback();
             })
             .catch(function (err) {
@@ -56,7 +53,6 @@ function postRapToTwitter (rapObject) {
     }
 
     function createTweet (callback) {
-        console.log('CREATE TWEET CALLED');
         const T = new Twit({
             consumer_key: process.env.CONSUMER_KEY,
             consumer_secret: process.env.CONSUMER_SECRET,
@@ -76,10 +72,8 @@ function postRapToTwitter (rapObject) {
                 const params = {status: `#${artists[0]} #${artists[1]} #${artists[2]} #${artists[3]}`, media_ids: [mediaIdStr]};
 
                 T.post('statuses/update', params, function () {
-                    console.log('Tweet Posted!');
                     var filePath = '/tmp/newRap.jpg'; 
                     fs.unlinkSync(filePath);
-                    console.log('Image Deleted from File System!');
                     callback();
                 });
                 }
