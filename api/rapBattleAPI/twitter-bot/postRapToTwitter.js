@@ -1,6 +1,4 @@
 const Jimp = require('jimp');
-const Filter = require('bad-words');
-const filter = new Filter();
 const Twit = require('twit');
 const fs = require('fs');
 const async = require('async');
@@ -35,10 +33,10 @@ function postRapToTwitter (rapObject, cb) {
             .then(function (font) {
                 return new Promise(function (resolve) {
                     return loadedImage
-                    .print(font, 120, 70, filter.clean(rapObject[0].line + ','), 480)
-                    .print(font, 120, 120, filter.clean(rapObject[1].line + ','), 480)
-                    .print(font, 120, 170, filter.clean(rapObject[2].line + ','), 480)
-                    .print(font, 120, 220, filter.clean(rapObject[3].line), 480)
+                    .print(font, 120, 70, rapObject[0].line + ',', 480)
+                    .print(font, 120, 120, rapObject[1].line + ',', 480)
+                    .print(font, 120, 170, rapObject[2].line + ',', 480)
+                    .print(font, 120, 220, rapObject[3].line, 480)
                     .write('/tmp/newRap.jpg', function () {
                         resolve();
                     });
