@@ -36,7 +36,7 @@ exports.handler = function (event, context, callback) {
 };
 
 var HELP_MESSAGE = 'What\'s up homie, you want to challenge me to a rap battle? Just say a theme to begin';
-var EXIT_MESSAGE = 'Cya later homie';
+var EXIT_MESSAGE = 'See you later you fkin pussy, come back when youve got some balls';
 
 
 var states = {
@@ -69,7 +69,7 @@ var handlers = {
 
 var startHandlers = Alexa.CreateStateHandler(states.START, {
     'Start': function () {
-        this.emit(':ask', 'Are you ready to battle homie? give me a theme and i\'ll start', 'Shall we begin?');
+        this.emit(':ask', `Warning, this game may contain strong language that some users may find offensive. <break time="2s">, ${HELP_MESSAGE}`, 'Go on, what you saying?');
     },
     'ResponseRap': function () {
         this.handler.state = states.BATTLE;
@@ -95,8 +95,14 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
     },
     'Battle': function () {
         var sesh = this.event.session.attributes;
-        var speech = sesh.response;
-        this.emit(':ask', speech, 'bye');
+        var speech = sesh.speechResponse;
+        var cardTitle = 'Alexa spits: ';
+        var cardContent = sesh.cardResponse;
+        // var imageObj = {
+        //     smallImageUrl: 'http://www.billboard.com/files/styles/article_main_image/public/media/Eazy-E-1990-billboard-650.jpg',
+        //     largeImageUrl: 'http://www.billboard.com/files/styles/article_main_image/public/media/Eazy-E-1990-billboard-650.jpg'
+        // }
+        this.emit(':askWithCard', speech, 'what you saying?', cardTitle, cardContent);
     },
     'ResponseRap': function () {
         var theme = this.event.request.intent.slots.Themes.value;
@@ -109,17 +115,17 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
             if (theme.split(' ').length === 1) {
                 var rapper = getAPIData(theme);
                 rapper.then((res) => {
-                    var formattedRap = {};
-                    formattedRap[1] = res.lyrics.firstLine;
-                    for (var i = 0; i < 3; i++) {
-                        formattedRap[i + 2] = res.lyrics.newLines[i].raw;
-                    }
-                    var response = formattedRap[1] + ', ' + formattedRap[2] + ', ' + formattedRap[3] + ', ' + formattedRap[4];
-                    sesh.response = response;
+                    var response = res.lyrics.map(function (el) {
+                        return el.line;
+                    });
+                    var cardResponse = response[0] + '\n' + response[1] + '\n' + response[2] + '\n' + response[3];
+                    var speechResponse = response[0] + '<break time="0.5s" />' + response[1] + '<break time="0.5s" />' + response[2] + '<break time="0.5s" />' + response[3];
+                    sesh.speechResponse = speechResponse;
+                    sesh.cardResponse = cardResponse;
                     this.emitWithState('Battle');
                 })
                     .catch((err) => {
-                        this.emit(':ask', `ERROR[0] ${err}`);
+                        this.emit(':ask', '');
                     });
             }
             var keywords = createNluPromise(theme);
@@ -132,35 +138,35 @@ var battleHandlers = Alexa.CreateStateHandler(states.BATTLE, {
                     }
                     return el;
                 }));
-                var rapper = getAPIData(themes[0]);
+                var rapper = getAPIData(themes[themes.length - 1]);
                 rapper.then((res) => {
-                    var formattedRap = {};
-                    formattedRap[1] = res.lyrics.firstLine;
-                    for (var i = 0; i < 3; i++) {
-                        formattedRap[i + 2] = res.lyrics.newLines[i].raw;
-                    }
-                    var response = formattedRap[1] + ',' + formattedRap[2] + ',' + formattedRap[3] + ',' + formattedRap[4];
-                    sesh.response = response;
-                    this.emit(':ask', `${response}`);
+                    var response = res.lyrics.map(function (el) {
+                        return ' ' + el.line;
+                    });
+                    var cardResponse = response[0] + '\n' + response[1] + '\n' + response[2] + '\n' + response[3];
+                    var speechResponse = response[0] + '<break time="0.5s" />' + response[1] + '<break time="0.5s" />' + response[2] + '<break time="0.5s" />' + response[3];
+                    sesh.speechResponse = speechResponse;
+                    sesh.cardResponse = cardResponse;
+                    this.emitWithState('Battle');
                 })
                     .catch((err) => {
-                        this.emit(':ask', `ERROR[0] ${err}`);
+                        this.emit(':ask', 'You need to speak properly bro, I cant understand you');
                     });
             })
                 .catch((err) => {
                     var rapper = getAPIData('getMeARandomRapPlease');
                     rapper.then((res) => {
-                        var formattedRap = {};
-                        formattedRap[1] = res.lyrics.firstLine;
-                        for (var i = 0; i < 3; i++) {
-                            formattedRap[i + 2] = res.lyrics.newLines[i].raw;
-                        }
-                        var response = formattedRap[1] + ',' + formattedRap[2] + ',' + formattedRap[3] + ',' + formattedRap[4];
-                        sesh.response = response;
+                        var response = res.lyrics.map(function (el) {
+                            return el.line + ', ';
+                        });
+                        var cardResponse = response[0] + '\n' + response[1] + '\n' + response[2] + '\n' + response[3];
+                        var speechResponse = response[0] + '<break time="0.5s" />' + response[1] + '<break time="0.5s" />' + response[2] + '<break time="0.5s" />' + response[3];
+                        sesh.speechResponse = speechResponse;
+                        sesh.cardResponse = cardResponse;
                         this.emitWithState('Battle');
                     })
                         .catch((err) => {
-                            this.emit(':ask', `err ${JSON.stringify(err)}`);
+                            this.emit(':ask', 'You need to speak properly bro, I cant understand you');
 
                         });
                 });
