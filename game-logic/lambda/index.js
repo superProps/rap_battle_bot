@@ -3,7 +3,7 @@ var Alexa = require('alexa-sdk');
 var _ = require('underscore');
 var NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
 var config = require('./config');
-// var async = require('async');
+
 
 var nlu = new NaturalLanguageUnderstandingV1({
     'username': config.josh1Credentials.username,
@@ -69,7 +69,7 @@ var handlers = {
 
 var startHandlers = Alexa.CreateStateHandler(states.START, {
     'Start': function () {
-        this.emit(':ask', `Warning, this game may contain strong language that some users may find offensive. <break time="2s">, ${HELP_MESSAGE}`, 'Go on, what you saying?');
+        this.emit(':ask', `Warning, this game may contain strong language that some users may find offensive. <break time="2s"/>, ${HELP_MESSAGE}`, 'Go on, what you saying?');
     },
     'ResponseRap': function () {
         this.handler.state = states.BATTLE;
